@@ -1,0 +1,15 @@
+{
+  "name": "ticket-booking-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend/booking-service",
+    "backend/payment-worker",
+    "backend/notification-worker",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:booking": "npm --workspace backend/booking-service run dev",
+    "dev:frontend": "npm --workspace frontend run dev"
+  }
+}
