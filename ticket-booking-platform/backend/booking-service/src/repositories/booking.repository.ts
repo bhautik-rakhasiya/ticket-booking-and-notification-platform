@@ -9,6 +9,7 @@ import { ConflictError } from "../utils/errors";
 // ─────────────────────────────────────────
 
 export interface CreateBookingData extends CreateBookingInput {
+  idempotencyKey: string;
   ticketPrice: number; // event price at booking time
   totalAmount: number; // ticketPrice × seatCount
 }
@@ -138,7 +139,7 @@ export const bookingRepository = {
           err.code === "P2002"
         ) {
           throw new ConflictError(
-            "A booking with this idempotency key already exists"
+            "A booking with the same user, event, and seat count already exists."
           );
         }
         throw err;

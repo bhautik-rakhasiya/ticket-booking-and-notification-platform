@@ -61,9 +61,15 @@ export const bookingService = {
     const ticketPrice = event.price;
     const totalAmount = parseFloat((ticketPrice * input.seatCount).toFixed(2));
 
+    // ── Generate Idempotency Key ───────────────────────────────────────
+    // Deterministic key based on user, event, and seat count to prevent
+    // duplicate bookings of the same size for the same event by the same user.
+    const idempotencyKey = `idemp:${input.userId}:${input.eventId}:${input.seatCount}`;
+
     // ── Atomic seat reservation inside DB transaction ──────────────────
     const booking = await bookingRepository.createWithSeatReservation({
       ...input,
+      idempotencyKey,
       ticketPrice,
       totalAmount,
     });

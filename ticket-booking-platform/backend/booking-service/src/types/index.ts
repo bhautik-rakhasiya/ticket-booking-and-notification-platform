@@ -8,7 +8,7 @@ export interface CreateBookingInput {
   eventId: string;
   userId: string;
   seatCount: number;
-  idempotencyKey: string;
+  idempotencyKey?: string;
 }
 
 export interface BookingResponse {

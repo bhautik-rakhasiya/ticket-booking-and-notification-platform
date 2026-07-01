@@ -10,6 +10,8 @@
   ],
   "scripts": {
     "dev:booking": "npm --workspace backend/booking-service run dev",
-    "dev:frontend": "npm --workspace frontend run dev"
+    "dev:frontend": "npm --workspace frontend run dev",
+    "build:booking": "npm --workspace backend/booking-service run build",
+    "build:frontend": "npm --workspace frontend run build"
   }
 }

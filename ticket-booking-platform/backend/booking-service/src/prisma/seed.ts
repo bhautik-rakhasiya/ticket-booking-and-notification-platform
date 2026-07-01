@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import logger from "../utils/logger";
 
 const prisma = new PrismaClient();
 
@@ -105,7 +106,7 @@ const SEED_EVENTS = [
 export async function seedDatabase(
   client: PrismaClient = prisma
 ): Promise<void> {
-  console.log("🌱 [Seed] Running upsert for", SEED_EVENTS.length, "events...");
+  logger.info("🌱 [Seed] Running upsert for %d events...", SEED_EVENTS.length);
 
   // ── Clean up any legacy events not in the fixed-UUID list ───────────
   // This handles leftover rows from earlier seed runs that used random UUIDs.
@@ -132,7 +133,7 @@ export async function seedDatabase(
       });
     }
     await client.event.deleteMany({ where: { id: { in: legacyIds } } });
-    console.log(`🗑️  [Seed] Removed ${legacyIds.length} legacy event(s).`);
+    logger.info(`🗑️  [Seed] Removed ${legacyIds.length} legacy event(s).`);
   }
 
   // ── Upsert canonical events ─────────────────────────────────────────
@@ -169,7 +170,7 @@ export async function seedDatabase(
     }
   }
 
-  console.log(
+  logger.info(
     `✅ [Seed] Done — ${created} created, ${updated} updated (total: ${SEED_EVENTS.length} events)`
   );
 }
@@ -181,7 +182,7 @@ export async function seedDatabase(
 if (require.main === module) {
   seedDatabase()
     .catch((err) => {
-      console.error("❌ [Seed] Failed:", err);
+      logger.error("❌ [Seed] Failed: %o", err);
       process.exit(1);
     })
     .finally(async () => {
