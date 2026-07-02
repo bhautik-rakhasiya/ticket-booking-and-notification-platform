@@ -1,4 +1,4 @@
-services:
+﻿services:
   postgres:
     image: postgres:16-alpine
     container_name: ticket-postgres
@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ticket_booking"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -58,12 +58,12 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - PORT=4000
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ticket_booking
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - REDIS_URL=redis://redis:6379
-      - REDIS_TTL_SECONDS=600
-      - NODE_ENV=development
+      PORT: 4000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ticket_booking
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      REDIS_TTL_SECONDS: 600
+      NODE_ENV: development
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,6 +71,11 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   payment-worker:
     build:
@@ -79,12 +84,12 @@ services:
     container_name: ticket-payment-worker
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ticket_booking
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - REDIS_URL=redis://redis:6379
-      - REDIS_TTL_SECONDS=600
-      - NODE_ENV=development
-      - PAYMENT_SUCCESS_RATE=80
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ticket_booking
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      REDIS_TTL_SECONDS: 600
+      NODE_ENV: development
+      PAYMENT_SUCCESS_RATE: 80
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,15 +105,17 @@ services:
     container_name: ticket-notification-worker
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ticket_booking
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - NODE_ENV=development
-      - MAX_NOTIFICATION_RETRIES=3
-      - RETRY_DELAY_MS=5000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ticket_booking
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      NODE_ENV: development
+      MAX_NOTIFICATION_RETRIES: 3
+      RETRY_DELAY_MS: 5000
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      booking-service:
         condition: service_healthy
 
   frontend:
@@ -120,9 +127,10 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://booking-service:4000
+      FRONTEND_API_PROXY_TARGET: http://booking-service:4000
     depends_on:
-      - booking-service
+      booking-service:
+        condition: service_healthy
 
 volumes:
   postgres-data:

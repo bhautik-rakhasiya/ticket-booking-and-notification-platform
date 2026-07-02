@@ -1,9 +1,9 @@
-node_modules
-dist
-logs
+**/node_modules
+**/dist
+**/logs
+**/.env
 .git
 .github
-.env
 *.log
-.env.example
+**/.env.example
 *.md

@@ -225,17 +225,60 @@ High concurrency (e.g., 100+ requests hitting a single seat) is handled using **
 ## 13. Running the Project
 
 ### Prerequisites
-Make sure you have node (v20+), docker, and postgres/redis/rabbitmq installed on your system.
+To run the system, ensure you have the following installed on your machine:
+* **Docker & Docker Desktop** (Recommended for full containerized stack run)
+* **Git** (For repository cloning)
+* **Node.js (v20+)** & **npm** (Required only for running locally outside Docker)
+* **PostgreSQL / Redis / RabbitMQ** (Required locally only if running without Docker)
 
-### Running Locally (Without Docker)
+---
 
-1. **Install Dependencies**:
+## 14. Quick Start (Docker Setup)
+
+This is the easiest way to launch the entire platform (all microservices, background workers, broker network, cache instance, database, and client dashboard) in one command.
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/bhautik-rakhasiya/ticket-booking-and-notification-platform.git
+cd ticket-booking-and-notification-platform
+```
+
+### Step 2: Spin up the Containers
+Run the following command to build the workspace dependencies and run the containers in detached (background) mode:
+```bash
+docker compose up -d --build
+```
+
+### Step 3: Access the Application Outputs
+Once the services start up and their health checks report healthy, you can access the system entry points and monitoring dashboards at the following URLs:
+
+| Service / Interface | URL | Access / Credentials |
+| :--- | :--- | :--- |
+| **📺 Frontend Dashboard (UI)** | **[http://localhost:5173](http://localhost:5173)** | React client to purchase tickets and view notification drawer |
+| **🚀 Booking HTTP API** | **[http://localhost:4000/api](http://localhost:4000/api)** | Main Express gateway backend endpoint |
+| **🐇 RabbitMQ Management Console** | **[http://localhost:15672](http://localhost:15672)** | Log in with: `guest` / `guest` to monitor active message queues |
+| **🐘 PostgreSQL Database Instance** | `localhost:5432` | Username: `postgres`, Password: `postgres`, DB: `ticket_booking` |
+| **🍒 Redis Caching Lock Store** | `localhost:6379` | Fast-path key lock store |
+
+To check container statuses or inspect running service logs:
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+---
+
+## 14a. Running Locally (Without Docker)
+
+If you prefer to run the services individually on your host machine:
+
+1. **Install Workspace Dependencies**:
    ```bash
    npm install
    ```
 
 2. **Setup Databases**:
-   Copy `.env.example` in each service directory to `.env` and configure your database and connection credentials.
+   Copy `.env.example` in each service directory to `.env` and configure your local connection credentials.
 
 3. **Deploy Schema**:
    Inside `backend/booking-service`:
@@ -251,18 +294,6 @@ Make sure you have node (v20+), docker, and postgres/redis/rabbitmq installed on
    npm run dev:notification  # Starts notification worker
    npm run dev:frontend      # Starts frontend dashboard (port 5173)
    ```
-
----
-
-## 14. Docker Setup
-
-To spin up the entire system including all databases, brokers, workers, and frontend in one command:
-
-```bash
-docker compose up -d --build
-```
-
-Access the Frontend dashboard at **[http://localhost:5173](http://localhost:5173)**.
 
 ---
 
