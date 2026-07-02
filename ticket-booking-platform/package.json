@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "ticket-booking-platform",
   "version": "1.0.0",
   "private": true,
@@ -13,7 +13,12 @@
     "dev:payment": "npm --workspace backend/payment-worker run dev",
     "dev:notification": "npm --workspace backend/notification-worker run dev",
     "dev:frontend": "npm --workspace frontend run dev",
+    "start:booking": "npm --workspace backend/booking-service run start",
+    "start:payment": "npm --workspace backend/payment-worker run start",
+    "start:notification": "npm --workspace backend/notification-worker run start",
     "build:booking": "npm --workspace backend/booking-service run build",
+    "build:payment": "npm --workspace backend/payment-worker run build",
+    "build:notification": "npm --workspace backend/notification-worker run build",
     "build:frontend": "npm --workspace frontend run build"
   }
 }

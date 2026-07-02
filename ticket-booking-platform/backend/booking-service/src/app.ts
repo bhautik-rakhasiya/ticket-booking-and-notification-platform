@@ -1,5 +1,4 @@
-import "dotenv/config";
-import express from "express";
+﻿import express from "express";
 import { requestLogger } from "./middlewares/requestLogger";
 import { notFoundHandler } from "./middlewares/notFound";
 import { errorHandler } from "./middlewares/errorHandler";

@@ -1,5 +1,4 @@
-import "dotenv/config";
-import { connectRabbitMQ } from "../messaging/connection";
+﻿import { connectRabbitMQ } from "../messaging/connection";
 import { publishMessage } from "../messaging/publisher";
 import { bookingRepository } from "../repositories/booking.repository";
 import { redisRepository } from "../repositories/redis.repository";

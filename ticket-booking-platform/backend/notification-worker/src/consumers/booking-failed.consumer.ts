@@ -1,5 +1,4 @@
-import "dotenv/config";
-import { connectRabbitMQ } from "../messaging/connection";
+﻿import { connectRabbitMQ } from "../messaging/connection";
 import { processNotificationEvent } from "../messaging/consumer";
 import { QUEUES } from "../../../../shared/messaging/queues";
 import logger from "../utils/logger";
@@ -11,7 +10,7 @@ import logger from "../utils/logger";
 export async function startBookingFailedConsumer(): Promise<void> {
   const { channel } = await connectRabbitMQ();
 
-  logger.info(`[booking-failed.consumer] 🎧 Listening on: ${QUEUES.BOOKING_FAILED}`);
+  logger.info(`[booking-failed.consumer] Listening on: ${QUEUES.BOOKING_FAILED}`);
 
   await channel.consume(
     QUEUES.BOOKING_FAILED,
@@ -27,3 +26,4 @@ export async function startBookingFailedConsumer(): Promise<void> {
 }
 
 export default startBookingFailedConsumer;
+

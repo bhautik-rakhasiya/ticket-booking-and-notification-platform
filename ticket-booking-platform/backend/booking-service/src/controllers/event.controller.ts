@@ -24,13 +24,12 @@ export const getEvents = async (
  * Responds with 404 if not found.
  */
 export const getEventById = async (
-  req: Request,
+  req: Request<{ eventId: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { eventId } = req.params;
-    const event = await eventService.getById(eventId);
+    const event = await eventService.getById(req.params.eventId);
     res.status(200).json(event);
   } catch (err) {
     next(err);

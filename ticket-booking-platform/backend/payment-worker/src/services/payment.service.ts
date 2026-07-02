@@ -1,4 +1,5 @@
-import { PaymentResult } from "../types";
+﻿import { PaymentResult } from "../types";
+import envConfig from "../config/env";
 import logger from "../utils/logger";
 
 /**
@@ -20,8 +21,8 @@ export const paymentService = {
    * @returns PaymentResult with success flag and optional failure reason
    */
   async processPayment(bookingId: string, totalAmount: number): Promise<PaymentResult> {
-    const successRate = Number(process.env.PAYMENT_SUCCESS_RATE ?? 80);
-    const roll = Math.random() * 100; // 0.0 – 99.99
+    const successRate = envConfig.paymentSuccessRate;
+    const roll = Math.random() * 100;
 
     logger.info(
       `[paymentService] Processing payment for booking=${bookingId} amount=${totalAmount} successRate=${successRate}% roll=${roll.toFixed(2)}`
@@ -34,11 +35,11 @@ export const paymentService = {
     if (success) {
       logger.info(`[paymentService] ✅ Payment SUCCESS for booking=${bookingId}`);
       return { success: true };
-    } else {
-      const reason = "Payment declined by simulated gateway";
-      logger.warn(`[paymentService] ❌ Payment FAILED for booking=${bookingId} reason="${reason}"`);
-      return { success: false, reason };
     }
+
+    const reason = "Payment declined by simulated gateway";
+    logger.warn(`[paymentService] ❌ Payment FAILED for booking=${bookingId} reason="${reason}"`);
+    return { success: false, reason };
   },
 };
 

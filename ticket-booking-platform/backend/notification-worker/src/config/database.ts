@@ -1,7 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import envConfig from "./env";
+import { createPrismaClient } from "../../../../shared/config/create-prisma-client";
 
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-});
+const prisma = createPrismaClient(
+  PrismaClient,
+  envConfig.nodeEnv,
+  "__notificationWorkerPrisma__"
+);
 
 export default prisma;

@@ -34,13 +34,12 @@ export const createBooking = async (
  * Responds with 404 if not found.
  */
 export const getBookingById = async (
-  req: Request,
+  req: Request<{ bookingId: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { bookingId } = req.params;
-    const booking = await bookingService.getById(bookingId);
+    const booking = await bookingService.getById(req.params.bookingId);
 
     res.status(200).json({
       bookingId: booking.bookingId,

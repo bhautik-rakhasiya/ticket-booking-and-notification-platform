@@ -1,23 +1,10 @@
-// ─────────────────────────────────────────
-// Incoming event payloads (from Payment Worker)
-// ─────────────────────────────────────────
+import type {
+  BookingConfirmedEvent,
+  BookingFailedEvent,
+} from "../../../../shared/events";
 
-export interface BookingStatusEvent {
-  eventType: string;
-  bookingId: string;
-  eventId: string;
-  userId: string;
-  status: "CONFIRMED" | "FAILED";
-  reason?: string;
-  processedAt: string;
-}
+export type BookingStatusEvent = BookingConfirmedEvent | BookingFailedEvent;
 
-// ─────────────────────────────────────────
-// Internal notification create input
-// ─────────────────────────────────────────
-
-export interface CreateNotificationInput {
-  bookingId: string;
-  type: "SUCCESS" | "FAILURE";
-  message: string;
-}
+export type {
+  CreateNotificationDto as CreateNotificationInput,
+} from "../../../../shared/dto";

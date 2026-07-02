@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { startBookingCreatedConsumer } from "./consumers/booking-created.consumer";
 import logger from "./utils/logger";
 import prisma from "./config/database";

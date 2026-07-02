@@ -1,4 +1,5 @@
 export interface BookingCreatedEvent {
+  eventType: string;
   bookingId: string;
   eventId: string;
   userId: string;

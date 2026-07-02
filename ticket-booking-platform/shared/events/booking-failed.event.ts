@@ -1,8 +1,9 @@
 export interface BookingFailedEvent {
+  eventType: string;
   bookingId: string;
   eventId: string;
   userId: string;
-  seatCount: number;
-  failureReason: string;
-  failedAt: string;
+  status: "FAILED";
+  reason: string;
+  processedAt: string;
 }

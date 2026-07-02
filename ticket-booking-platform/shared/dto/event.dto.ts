@@ -5,5 +5,5 @@ export interface EventDto {
   totalSeats: number;
   availableSeats: number;
   price: number;
-  status: string;
+  status: "ACTIVE" | "SOLD_OUT" | "CANCELLED";
 }

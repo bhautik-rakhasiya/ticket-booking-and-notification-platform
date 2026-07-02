@@ -1,5 +1,4 @@
-import "dotenv/config";
-import type { ConsumeMessage } from "amqplib";
+﻿import type { ConsumeMessage } from "amqplib";
 import { getChannel } from "../messaging/connection";
 import { notificationService } from "../services/notification.service";
 import { retryService } from "../services/retry.service";

@@ -1,11 +1,13 @@
+﻿import type { BookingCreatedEvent } from "../../../../shared/events";
+import { ROUTING_KEYS } from "../../../../shared/messaging/routingKeys";
+import envConfig from "../config/env";
 import { bookingRepository } from "../repositories/booking.repository";
 import { eventRepository } from "../repositories/event.repository";
 import { redisRepository } from "../repositories/redis.repository";
 import { BookingResponse, CreateBookingInput } from "../types";
+import logger from "../utils/logger";
 import { ConflictError, NotFoundError } from "../utils/errors";
 import { publisherService } from "./publisher.service";
-import { ROUTING_KEYS } from "../../../../shared/messaging/routingKeys";
-import logger from "../utils/logger";
 
 export const bookingService = {
   /**
@@ -51,15 +53,11 @@ export const bookingService = {
     }
 
     if (event.status !== "ACTIVE") {
-      throw new ConflictError(
-        `Event '${event.name}' is not available for booking (status: ${event.status})`
-      );
+      throw new ConflictError(`Event '${event.name}' is not available for booking (status: ${event.status})`);
     }
 
     if (event.availableSeats < input.seatCount) {
-      throw new ConflictError(
-        `Insufficient seats available. Requested: ${input.seatCount}, Available: ${event.availableSeats}`
-      );
+      throw new ConflictError(`Insufficient seats available. Requested: ${input.seatCount}, Available: ${event.availableSeats}`);
     }
 
     // ── Pricing calculation ────────────────────────────────────────────
@@ -84,12 +82,7 @@ export const bookingService = {
     }
 
     // Database check (Fallback Layer)
-    const existingPending = await bookingRepository.findPendingDuplicate(
-      input.userId,
-      input.eventId,
-      input.seatCount
-    );
-
+    const existingPending = await bookingRepository.findPendingDuplicate(input.userId, input.eventId, input.seatCount);
     if (existingPending) {
       throw new ConflictError(
         "You already have a pending booking for this event with the same seat count. " +
@@ -118,8 +111,8 @@ export const bookingService = {
       createdAt: new Date().toISOString(),
     });
     try {
-      await redisRepository.set(baseKey, redisValue, redisTTL);
-      logger.info(`[bookingService] Idempotency lock stored in Redis for key=${baseKey} (TTL ${redisTTL}s)`);
+      await redisRepository.set(baseKey, redisValue, envConfig.redisTtlSeconds);
+      logger.info(`[bookingService] Idempotency lock stored in Redis for key=${baseKey} (TTL ${envConfig.redisTtlSeconds}s)`);
     } catch (err) {
       logger.error(`[bookingService] Redis SET failed for key=${baseKey}:`, err);
     }
@@ -128,12 +121,12 @@ export const bookingService = {
     // IMPORTANT: Never publish inside the transaction.
     // If publish fails, log the error. Do NOT rollback — booking is committed.
     try {
-      const eventPayload = {
-        eventType: ROUTING_KEYS.BOOKING_CREATED,  // "booking.created"
+      const eventPayload: BookingCreatedEvent = {
+        eventType: ROUTING_KEYS.BOOKING_CREATED,
         bookingId: booking.bookingId,
-        eventId: booking.eventId,
-        userId: booking.userId,
-        seatCount: booking.seatCount,
+        eventId: booking.eventId!,
+        userId: booking.userId!,
+        seatCount: booking.seatCount!,
         ticketPrice: booking.ticketPrice,
         totalAmount: booking.totalAmount,
         createdAt: new Date().toISOString(),
@@ -141,12 +134,7 @@ export const bookingService = {
 
       await publisherService.publish(ROUTING_KEYS.BOOKING_CREATED, eventPayload);
     } catch (publishErr) {
-      // Publish failure must never fail the booking response.
-      logger.error(
-        "[bookingService] booking.created publish failed for bookingId=%s: %o",
-        booking.bookingId,
-        publishErr
-      );
+      logger.error("[bookingService] booking.created publish failed for bookingId=%s: %o", booking.bookingId, publishErr);
     }
 
     return booking;

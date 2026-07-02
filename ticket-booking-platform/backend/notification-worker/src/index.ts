@@ -1,6 +1,5 @@
-import "dotenv/config";
 import { startBookingConfirmedConsumer } from "./consumers/booking-confirmed.consumer";
-import { startBookingFailedConsumer }    from "./consumers/booking-failed.consumer";
+import { startBookingFailedConsumer } from "./consumers/booking-failed.consumer";
 import logger from "./utils/logger";
 import prisma from "./config/database";
 

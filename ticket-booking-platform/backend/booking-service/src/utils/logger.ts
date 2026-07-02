@@ -1,5 +1,6 @@
-import winston from "winston";
+﻿import winston from "winston";
 import path from "path";
+import envConfig from "../config/env";
 
 // ─── Log Formatting ──────────────────────────────────────────────────
 const logFormat = winston.format.combine(
@@ -36,7 +37,7 @@ const transports: winston.transport[] = [
 
 // ─── Logger Instance ─────────────────────────────────────────────────
 export const logger = winston.createLogger({
-  level: process.env.NODE_ENV === "production" ? "info" : "debug",
+  level: envConfig.nodeEnv === "production" ? "info" : "debug",
   format: logFormat,
   defaultMeta: { service: "booking-service" },
   transports,

@@ -1,13 +1,13 @@
-import Redis from "ioredis";
-import redisConfig from "../config/redis";
+﻿import Redis from "ioredis";
+import envConfig from "../config/env";
 import logger from "../utils/logger";
 
 let redisClient: Redis | null = null;
 let isRedisConnected = false;
 
 try {
-  redisClient = new Redis(redisConfig.url, {
-    maxRetriesPerRequest: 1, // Minimize blockages when Redis is down
+  redisClient = new Redis(envConfig.redisUrl, {
+    maxRetriesPerRequest: 1,
     retryStrategy() {
       // Reconnect every 5 seconds
       return 5000;

@@ -1,11 +1,9 @@
-import "dotenv/config";
 import app from "./app";
+import envConfig from "./config/env";
 import { seedDatabase } from "./prisma/seed";
 import prisma from "./config/database";
 import logger from "./utils/logger";
 import { connectRabbitMQ } from "./messaging/connection";
-
-const port = Number(process.env.PORT || 4000);
 
 async function bootstrap(): Promise<void> {
   // ── Step 1: Seed the database ──────────────────────────────────────
@@ -18,7 +16,7 @@ async function bootstrap(): Promise<void> {
   await connectRabbitMQ();
 
   // ── Step 3: Start HTTP server ──────────────────────────────────────
-  app.listen(port, () => {
+  app.listen(envConfig.port, () => {
     logger.info(`🚀 Booking service running on port ${port}`);
   });
 }

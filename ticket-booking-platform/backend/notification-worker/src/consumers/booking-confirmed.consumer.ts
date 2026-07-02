@@ -1,5 +1,4 @@
-import "dotenv/config";
-import { connectRabbitMQ } from "../messaging/connection";
+﻿import { connectRabbitMQ } from "../messaging/connection";
 import { processNotificationEvent } from "../messaging/consumer";
 import { QUEUES } from "../../../../shared/messaging/queues";
 import logger from "../utils/logger";
@@ -11,7 +10,7 @@ import logger from "../utils/logger";
 export async function startBookingConfirmedConsumer(): Promise<void> {
   const { channel } = await connectRabbitMQ();
 
-  logger.info(`[booking-confirmed.consumer] 🎧 Listening on: ${QUEUES.BOOKING_CONFIRMED}`);
+  logger.info(`[booking-confirmed.consumer] Listening on: ${QUEUES.BOOKING_CONFIRMED}`);
 
   await channel.consume(
     QUEUES.BOOKING_CONFIRMED,
@@ -27,3 +26,4 @@ export async function startBookingConfirmedConsumer(): Promise<void> {
 }
 
 export default startBookingConfirmedConsumer;
+
