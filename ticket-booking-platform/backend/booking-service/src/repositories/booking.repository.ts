@@ -1,6 +1,6 @@
 import { Decimal } from "@prisma/client/runtime/library";
 import { Prisma } from "@prisma/client";
-import prisma from "../config/database/prisma.client";
+import prisma from "../config/database";
 import { BookingResponse, CreateBookingInput } from "../types";
 import { ConflictError } from "../utils/errors";
 

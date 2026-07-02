@@ -2,6 +2,9 @@ import { bookingRepository } from "../repositories/booking.repository";
 import { eventRepository } from "../repositories/event.repository";
 import { BookingResponse, CreateBookingInput } from "../types";
 import { ConflictError, NotFoundError } from "../utils/errors";
+import { publisherService } from "./publisher.service";
+import { ROUTING_KEYS } from "../../../../shared/messaging/routingKeys";
+import logger from "../utils/logger";
 
 export const bookingService = {
   /**
@@ -33,7 +36,10 @@ export const bookingService = {
    * The final atomic seat check happens inside the DB transaction
    * (SELECT FOR UPDATE) to guard against race conditions.
    *
-   * NOTE: RabbitMQ publishing is intentionally NOT done here (Phase 1 only).
+   * Phase 1 — Messaging:
+   *  After the transaction commits, a booking.created event is published
+   *  to RabbitMQ. If publishing fails the booking is NOT rolled back —
+   *  the data is already persisted. The error is logged for observability.
    */
   async createBooking(input: CreateBookingInput): Promise<BookingResponse> {
     // ── Pre-transaction business validation ────────────────────────────
@@ -67,12 +73,38 @@ export const bookingService = {
     const idempotencyKey = `idemp:${input.userId}:${input.eventId}:${input.seatCount}`;
 
     // ── Atomic seat reservation inside DB transaction ──────────────────
+    // After this call returns, the transaction is fully committed.
     const booking = await bookingRepository.createWithSeatReservation({
       ...input,
       idempotencyKey,
       ticketPrice,
       totalAmount,
     });
+
+    // ── Publish booking.created event (AFTER commit) ───────────────────
+    // IMPORTANT: Never publish inside the transaction.
+    // If publish fails, log the error. Do NOT rollback — booking is committed.
+    try {
+      const eventPayload = {
+        eventType: ROUTING_KEYS.BOOKING_CREATED,  // "booking.created"
+        bookingId: booking.bookingId,
+        eventId: booking.eventId,
+        userId: booking.userId,
+        seatCount: booking.seatCount,
+        ticketPrice: booking.ticketPrice,
+        totalAmount: booking.totalAmount,
+        createdAt: new Date().toISOString(),
+      };
+
+      await publisherService.publish(ROUTING_KEYS.BOOKING_CREATED, eventPayload);
+    } catch (publishErr) {
+      // Publish failure must never fail the booking response.
+      logger.error(
+        "[bookingService] booking.created publish failed for bookingId=%s: %o",
+        booking.bookingId,
+        publishErr
+      );
+    }
 
     return booking;
   },

@@ -1,15 +1,23 @@
 import "dotenv/config";
 import app from "./app";
 import { seedDatabase } from "./prisma/seed";
-import prisma from "./config/database/prisma.client";
+import prisma from "./config/database";
 import logger from "./utils/logger";
+import { connectRabbitMQ } from "./messaging/connection";
 
 const port = Number(process.env.PORT || 4000);
 
 async function bootstrap(): Promise<void> {
-  // Run seed upsert before accepting traffic
+  // ── Step 1: Seed the database ──────────────────────────────────────
   await seedDatabase();
 
+  // ── Step 2: Connect to RabbitMQ & set up topology ─────────────────
+  //   - Asserts booking.exchange (topic, durable)
+  //   - Asserts booking.created.queue, booking.confirmed.queue, booking.failed.queue
+  //   - Binds queues to exchange with their routing keys
+  await connectRabbitMQ();
+
+  // ── Step 3: Start HTTP server ──────────────────────────────────────
   app.listen(port, () => {
     logger.info(`🚀 Booking service running on port ${port}`);
   });

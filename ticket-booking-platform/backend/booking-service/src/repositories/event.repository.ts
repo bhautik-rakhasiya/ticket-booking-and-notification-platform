@@ -1,5 +1,5 @@
 import { Decimal } from "@prisma/client/runtime/library";
-import prisma from "../config/database/prisma.client";
+import prisma from "../config/database";
 import { EventResponse } from "../types";
 
 /**

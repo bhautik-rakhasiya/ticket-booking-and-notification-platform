@@ -6,7 +6,11 @@
     "dev": "tsx src/index.ts",
     "build": "tsc"
   },
+  "dependencies": {
+    "amqplib": "^0.10.4"
+  },
   "devDependencies": {
+    "@types/amqplib": "^0.10.5",
     "tsx": "^4.19.2",
     "typescript": "^5.9.2"
   }
