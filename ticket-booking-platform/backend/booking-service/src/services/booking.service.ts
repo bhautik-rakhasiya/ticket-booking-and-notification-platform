@@ -67,10 +67,27 @@ export const bookingService = {
     const ticketPrice = event.price;
     const totalAmount = parseFloat((ticketPrice * input.seatCount).toFixed(2));
 
-    // ── Generate Idempotency Key ───────────────────────────────────────
-    // Deterministic key based on user, event, and seat count to prevent
-    // duplicate bookings of the same size for the same event by the same user.
-    const idempotencyKey = `idemp:${input.userId}:${input.eventId}:${input.seatCount}`;
+    // ── Idempotency check — only block PENDING duplicates ──────────────────
+    // Key that identifies "same user, same event, same seat count".
+    // We look up any EXISTING booking with this combination first.
+    const baseKey = `idemp:${input.userId}:${input.eventId}:${input.seatCount}`;
+
+    const existingPending = await bookingRepository.findPendingDuplicate(
+      input.userId,
+      input.eventId,
+      input.seatCount
+    );
+
+    if (existingPending) {
+      throw new ConflictError(
+        "You already have a pending booking for this event with the same seat count. " +
+        "Please wait for payment processing to complete before booking again."
+      );
+    }
+
+    // If a previous booking for the same combination is CONFIRMED or FAILED,
+    // we must use a unique key to avoid the DB unique constraint blocking the new insert.
+    const idempotencyKey = `${baseKey}:${Date.now()}`;
 
     // ── Atomic seat reservation inside DB transaction ──────────────────
     // After this call returns, the transaction is fully committed.

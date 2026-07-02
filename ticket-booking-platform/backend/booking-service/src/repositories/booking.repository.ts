@@ -56,6 +56,26 @@ export const bookingRepository = {
   },
 
   /**
+   * Checks whether a PENDING booking already exists for the same
+   * userId + eventId + seatCount combination.
+   *
+   * Used by the service layer to enforce the rule:
+   *  "Only block re-booking while payment is still in progress (PENDING).
+   *   Once a booking is CONFIRMED or FAILED the user may book again."
+   */
+  async findPendingDuplicate(
+    userId: string,
+    eventId: string,
+    seatCount: number
+  ): Promise<boolean> {
+    const existing = await prisma.booking.findFirst({
+      where: { userId, eventId, seatCount, status: "PENDING" },
+      select: { id: true },
+    });
+    return existing !== null;
+  },
+
+  /**
    * Creates a booking inside a PostgreSQL transaction.
    *
    * Concurrency safety:
@@ -119,31 +139,17 @@ export const bookingRepository = {
       `;
 
       // 4. Create the booking record with pricing info
-      let booking;
-      try {
-        booking = await tx.booking.create({
-          data: {
-            eventId: data.eventId,
-            userId: data.userId,
-            seatCount: data.seatCount,
-            ticketPrice: data.ticketPrice,
-            totalAmount: data.totalAmount,
-            idempotencyKey: data.idempotencyKey,
-            status: "PENDING",
-          },
-        });
-      } catch (err: unknown) {
-        // Unique constraint violation on idempotencyKey → 409
-        if (
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === "P2002"
-        ) {
-          throw new ConflictError(
-            "A booking with the same user, event, and seat count already exists."
-          );
-        }
-        throw err;
-      }
+      const booking = await tx.booking.create({
+        data: {
+          eventId:        data.eventId,
+          userId:         data.userId,
+          seatCount:      data.seatCount,
+          ticketPrice:    data.ticketPrice,
+          totalAmount:    data.totalAmount,
+          idempotencyKey: data.idempotencyKey,
+          status:         "PENDING",
+        },
+      });
 
       return toBookingResponse(booking);
     });

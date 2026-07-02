@@ -32,7 +32,6 @@ export const eventRepository = {
    */
   async findAll(): Promise<EventResponse[]> {
     const events = await prisma.event.findMany({
-      where: { status: "ACTIVE" },
       orderBy: { createdAt: "asc" },
     });
     return events.map(toEventResponse);
