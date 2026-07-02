@@ -1,5 +1,6 @@
 import { bookingRepository } from "../repositories/booking.repository";
 import { eventRepository } from "../repositories/event.repository";
+import { redisRepository } from "../repositories/redis.repository";
 import { BookingResponse, CreateBookingInput } from "../types";
 import { ConflictError, NotFoundError } from "../utils/errors";
 import { publisherService } from "./publisher.service";
@@ -72,6 +73,17 @@ export const bookingService = {
     // We look up any EXISTING booking with this combination first.
     const baseKey = `idemp:${input.userId}:${input.eventId}:${input.seatCount}`;
 
+    // Redis Check (First Layer)
+    const redisExists = await redisRepository.exists(baseKey);
+    if (redisExists) {
+      logger.warn(`[bookingService] Duplicate booking request blocked by Redis for key=${baseKey}`);
+      throw new ConflictError(
+        "A booking for this event with the same seat count is already being processed. " +
+        "Please wait until the current booking completes."
+      );
+    }
+
+    // Database check (Fallback Layer)
     const existingPending = await bookingRepository.findPendingDuplicate(
       input.userId,
       input.eventId,
@@ -97,6 +109,20 @@ export const bookingService = {
       ticketPrice,
       totalAmount,
     });
+
+    // ── Store Redis Key (after transaction commits successfully) ─────────
+    const redisTTL = Number(process.env.REDIS_TTL_SECONDS || 600);
+    const redisValue = JSON.stringify({
+      bookingId: booking.bookingId,
+      status: "PENDING",
+      createdAt: new Date().toISOString(),
+    });
+    try {
+      await redisRepository.set(baseKey, redisValue, redisTTL);
+      logger.info(`[bookingService] Idempotency lock stored in Redis for key=${baseKey} (TTL ${redisTTL}s)`);
+    } catch (err) {
+      logger.error(`[bookingService] Redis SET failed for key=${baseKey}:`, err);
+    }
 
     // ── Publish booking.created event (AFTER commit) ───────────────────
     // IMPORTANT: Never publish inside the transaction.

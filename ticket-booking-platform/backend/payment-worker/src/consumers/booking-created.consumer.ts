@@ -2,6 +2,7 @@ import "dotenv/config";
 import { connectRabbitMQ } from "../messaging/connection";
 import { publishMessage } from "../messaging/publisher";
 import { bookingRepository } from "../repositories/booking.repository";
+import { redisRepository } from "../repositories/redis.repository";
 import { paymentService } from "../services/payment.service";
 import { QUEUES } from "../../../../shared/messaging/queues";
 import { ROUTING_KEYS } from "../../../../shared/messaging/routingKeys";
@@ -113,6 +114,8 @@ async function processBookingCreated(
     return;
   }
 
+  const redisKey = `idemp:${userId}:${eventId}:${seatCount}`;
+
   // ── 4. Payment SUCCESS path ──────────────────────────────────────────
   if (paymentResult.success) {
     try {
@@ -126,6 +129,14 @@ async function processBookingCreated(
       }
 
       logger.info(`[consumer] ✅ Booking CONFIRMED`, { bookingId });
+
+      // Clean up Redis Idempotency Key
+      try {
+        await redisRepository.delete(redisKey);
+        logger.info(`[consumer] Redis idempotency key deleted: ${redisKey}`);
+      } catch (redisErr) {
+        logger.error(`[consumer] Redis DEL failed for key=${redisKey}:`, redisErr);
+      }
 
       // Publish booking.confirmed
       const confirmedPayload: BookingConfirmedEvent = {
@@ -173,6 +184,14 @@ async function processBookingCreated(
       seatCount,
       reason: failReason,
     });
+
+    // Clean up Redis Idempotency Key
+    try {
+      await redisRepository.delete(redisKey);
+      logger.info(`[consumer] Redis idempotency key deleted: ${redisKey}`);
+    } catch (redisErr) {
+      logger.error(`[consumer] Redis DEL failed for key=${redisKey}:`, redisErr);
+    }
 
     // Publish booking.failed
     const failedPayload: BookingFailedEvent = {
