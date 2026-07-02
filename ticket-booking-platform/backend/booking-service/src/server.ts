@@ -17,7 +17,7 @@ async function bootstrap(): Promise<void> {
 
   // ── Step 3: Start HTTP server ──────────────────────────────────────
   app.listen(envConfig.port, () => {
-    logger.info(`🚀 Booking service running on port ${port}`);
+    logger.info(`🚀 Booking service running on port ${envConfig.port}`);
   });
 }
 
