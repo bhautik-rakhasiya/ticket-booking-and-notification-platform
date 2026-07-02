@@ -1,5 +1,7 @@
-export const databaseConfig = {
-  url: process.env.DATABASE_URL || "postgresql://localhost:5432/ticket_booking",
-};
+import { PrismaClient } from "@prisma/client";
 
-export default databaseConfig;
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+});
+
+export default prisma;

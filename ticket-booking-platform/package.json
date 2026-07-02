@@ -11,6 +11,7 @@
   "scripts": {
     "dev:booking": "npm --workspace backend/booking-service run dev",
     "dev:payment": "npm --workspace backend/payment-worker run dev",
+    "dev:notification": "npm --workspace backend/notification-worker run dev",
     "dev:frontend": "npm --workspace frontend run dev",
     "build:booking": "npm --workspace backend/booking-service run build",
     "build:frontend": "npm --workspace frontend run build"
