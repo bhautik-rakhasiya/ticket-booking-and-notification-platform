@@ -106,6 +106,7 @@ async function processBookingCreated(
   let paymentResult;
   try {
     logger.info(`[consumer] 💳 Payment started`, { bookingId, totalAmount });
+    await redisRepository.storeMessageCountRedis()
     paymentResult = await paymentService.processPayment(bookingId, totalAmount);
   } catch (err) {
     logger.error(`[consumer] Payment simulation threw an error for booking=${bookingId}: %o`, err);

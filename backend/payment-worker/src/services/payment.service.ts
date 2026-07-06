@@ -1,6 +1,7 @@
 ﻿import { PaymentResult } from "../types";
 import envConfig from "../config/env";
 import logger from "../utils/logger";
+import redisRepository from "../repositories/redis.repository";
 
 /**
  * Payment simulation service.
@@ -21,17 +22,19 @@ export const paymentService = {
    * @returns PaymentResult with success flag and optional failure reason
    */
   async processPayment(bookingId: string, totalAmount: number): Promise<PaymentResult> {
-    const successRate = envConfig.paymentSuccessRate;
-    const roll = Math.random() * 100;
-
-    logger.info(
-      `[paymentService] Processing payment for booking=${bookingId} amount=${totalAmount} successRate=${successRate}% roll=${roll.toFixed(2)}`
-    );
+    // const successRate = envConfig.paymentSuccessRate;
+    // const roll = Math.random() * 100;
+    //    logger.info(
+    //   `[paymentService] Processing payment for booking=${bookingId} amount=${totalAmount} successRate=${successRate}% roll=${roll.toFixed(2)}`
+    // );
+    const successCount = await redisRepository.getSuccessFromRedis();
 
     // Simulate a small processing delay (50–150ms)
     await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100));
 
-    const success = roll < successRate;
+
+    // const success = roll < successRate;
+    const success = Number(successCount) < 4 ? true : false;
     if (success) {
       logger.info(`[paymentService] ✅ Payment SUCCESS for booking=${bookingId}`);
       return { success: true };
